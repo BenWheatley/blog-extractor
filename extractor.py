@@ -53,6 +53,18 @@ for item in channel.findall('item'):
 	else:
 		path = None
 	
+	
+	# Extracting categories and tags
+	categories = []
+	tags = []
+	for category in item.findall('.//category'):
+		domain = category.get('domain')
+		name = category.text.strip()
+		if domain == 'category':
+			categories.append(name)
+		elif domain == 'post_tag':
+			tags.append(name)
+	
 	print(f"pub_date_element = {pub_date_element.text}")
 	if content == None or path == None:
 		sys.stderr.write(f"error with item at {pub_date_element.text}+ '\n'")
