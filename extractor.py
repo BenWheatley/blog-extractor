@@ -23,8 +23,12 @@ def remove_strings(source, to_remove):
 
 
 def remove_wp_image(source):
-	pattern = re.compile(r' ?wp-image-\d+')
-	result = re.sub(pattern, '', source)
+	pattern1 = re.compile(r' ?wp-image-\d+')
+	result = re.sub(pattern1, '', source)
+	
+	pattern2 = re.compile(r'\n<!-- wp:image .* -->')
+	result = re.sub(pattern2, '', result)
+	
 	return result
 
 # Accessing and printing information for each item
@@ -40,7 +44,7 @@ for item in channel.findall('item'):
 	if content_encoded is not None and content_encoded.text is not None:
 		content = content_encoded.text
 		content = remove_wp_image(content)
-		content = remove_strings(content, ["<!-- wp:paragraph -->\n", "\n<!-- /wp:paragraph -->", 'wp-element-caption', 'wp-', 'class=""', "<!--more-->", "<!-- wp:page-list /-->"])
+		content = remove_strings(content, ["<!-- wp:paragraph -->\n", "\n<!-- /wp:paragraph -->", 'wp-element-caption', 'wp-', 'class=""', "<!--more-->", "<!-- wp:page-list /-->", "\n<!-- /wp:image -->", "\n<p><!-- wp:paragraph --></p>", "<!-- wp:quote -->", "<!-- /wp:quote -->", "<!-- wp:heading -->", "<!-- wp:heading -->", "<!-- wp:table -->", "<!-- /wp:table -->"])
 	else:
 		content = None
 	
