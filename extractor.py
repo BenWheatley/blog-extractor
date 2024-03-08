@@ -14,6 +14,11 @@ description = channel.find('description').text
 print(f"Feed Title: {title}")
 print(f"Feed Description: {description}")
 
+def remove_strings(source, to_remove):
+	for s in to_remove:
+		source = source.replace(s, "")
+	return source
+
 # Accessing and printing information for each item
 for item in channel.findall('item'):
 	item_title = item.find('title').text
@@ -26,6 +31,7 @@ for item in channel.findall('item'):
 	# Extracting content inside CDATA
 	if content_encoded is not None and content_encoded.text is not None:
 		content = content_encoded.text
+		content = remove_strings(content, ["<!-- wp:paragraph -->\n", "\n<!-- /wp:paragraph -->", 'wp-element-caption', 'wp-', 'class=""'])
 	else:
 		content = None
 	
@@ -39,8 +45,8 @@ for item in channel.findall('item'):
 		path = None
 	
 	print(f"\n---\nOutput:\n")
-	print(f"<h1>{item_title}</h1>\n\n")
-	print(f"Content Encoded: {content}")
+	print(f"<h1>{item_title}</h1>\n")
+	print(content)
 	print(f"<a href=\"{item_link}\">Original post: {item_link}</a>")
 	
 	print(f"Output path: `{path}`")
