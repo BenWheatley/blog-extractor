@@ -2,6 +2,9 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 import re
 import sys
+import os
+import subprocess
+import platform
 
 # Load the RSS feed XML file
 filename = "/Users/benwheatley/Downloads/Exported ks-wp blog/kitsunesoftware.wordpress.com-2023-12-04-15_56_29/kitsunesoftware.wordpress.2023-12-04.000.xml"
@@ -9,8 +12,8 @@ tree = ET.parse(filename)
 root = tree.getroot()
 
 root_url = "https://benwheatley.github.io/blog"
-output_root = " /Users/benwheatley/Documents/Personal/Projects/Code/blog"
-DEBUG = True
+output_root = "/Users/benwheatley/Documents/Personal/Projects/Code/blog"
+DEBUG = False
 
 # Accessing channel information
 channel = root.find('channel')
@@ -131,7 +134,10 @@ for item in channel.findall('item'):
 		print(f"Output path: `{path}`")
 	else:
 		try:
-			with open(path, 'w') as file: file.write(output_string)
-		except:
-			sys.stderr.write(f"Error: File '{file_path}' already exists.\n")
+			os.makedirs(os.path.dirname(path), exist_ok=True)
+			with open(path, 'x') as file: file.write(output_string)
+		except Exception as e:
+			sys.stderr.write(f"An unexpected error occurred: {e}\n")
 			sys.stderr.write(f"New content was going to be:\n\n{content}\n\n")
+			if platform.system() == 'Darwin':
+				subprocess.run(['open', '-R', path])
