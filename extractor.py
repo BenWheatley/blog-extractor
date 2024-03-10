@@ -40,6 +40,19 @@ def update_all_img_src(input_string):
 	pattern = re.compile(r'<img src="https://kitsunesoftware\.files\.wordpress\.com/(\d{4}/\d{2}/[^"]+)"')
 	return pattern.sub(fr'<img src="{root_url}/\1"', input_string)
 
+def add_missing_p_tags(input_string):
+	paragraphs = input_string.split('\n')
+	output = ""
+	for p in paragraphs:
+		stripped = p.strip()
+		if stripped.startswith("<") or len(stripped) == 0:
+			output += p
+		else:
+			output += f"<p>{stripped}</p>"
+		output += "\n"
+	
+	return output
+
 # Accessing and printing information for each item
 for item in channel.findall('item'):
 	item_title = item.find('title').text
@@ -53,8 +66,9 @@ for item in channel.findall('item'):
 	if content_encoded is not None and content_encoded.text is not None:
 		content = content_encoded.text
 		content = remove_wp_image(content)
-		content = remove_strings(content, ["<!-- wp:paragraph -->\n", "\n<!-- /wp:paragraph -->", 'wp-element-caption', 'wp-', 'class=""', "<!--more-->", "<!-- wp:page-list /-->", "\n<!-- /wp:image -->", "\n<p><!-- wp:paragraph --></p>", "<!-- wp:quote -->", "<!-- /wp:quote -->", "<!-- wp:heading -->", "<!-- wp:heading -->", "<!-- wp:table -->", "<!-- /wp:table -->"])
+		content = remove_strings(content, ["<!-- wp:paragraph -->\n", "\n<!-- /wp:paragraph -->", 'wp-element-caption', 'wp-', 'class=""', "<!--more-->", "<!-- wp:page-list /-->", "\n<!-- /wp:image -->", "\n<p><!-- wp:paragraph --></p>", "<!-- wp:quote -->", "<!-- /wp:quote -->", "<!-- wp:heading -->", "<!-- wp:heading -->", "<!-- wp:table -->", "<!-- /wp:table -->", "p1", "s1", ' class=""'])
 		content = update_all_img_src(content)
+		content = add_missing_p_tags(content)
 	else:
 		content = None
 	
