@@ -9,6 +9,8 @@ tree = ET.parse(filename)
 root = tree.getroot()
 
 root_url = "https://benwheatley.github.io/blog"
+output_root = " /Users/benwheatley/Documents/Personal/Projects/Code/blog"
+DEBUG = True
 
 # Accessing channel information
 channel = root.find('channel')
@@ -53,6 +55,10 @@ def add_missing_p_tags(input_string):
 	
 	return output
 
+def remove_wp_open_tag_comments_with_json(source):
+	pattern = re.compile(r'<!--\s*wp:(\w+)\s+({[^}]+})\s*-->')
+	return re.sub(pattern, "", source)
+
 # Accessing and printing information for each item
 for item in channel.findall('item'):
 	item_title = item.find('title').text
@@ -66,9 +72,12 @@ for item in channel.findall('item'):
 	if content_encoded is not None and content_encoded.text is not None:
 		content = content_encoded.text
 		content = remove_wp_image(content)
-		content = remove_strings(content, ["<!-- wp:paragraph -->\n", "\n<!-- /wp:paragraph -->", 'wp-element-caption', 'wp-', 'class=""', "<!--more-->", "<!-- wp:page-list /-->", "\n<!-- /wp:image -->", "\n<p><!-- wp:paragraph --></p>", "<!-- wp:quote -->", "<!-- /wp:quote -->", "<!-- wp:heading -->", "<!-- wp:heading -->", "<!-- wp:table -->", "<!-- /wp:table -->", "p1", "s1", ' class=""'])
+		content = remove_strings(content, ["<!-- wp:paragraph -->\n", "\n<!-- /wp:paragraph -->", 'wp-element-caption', 'wp-', 'class=""', "<!--more-->", "<!-- wp:page-list /-->", "\n<!-- /wp:image -->", "\n<p><!-- wp:paragraph --></p>", "<!-- wp:quote -->", "<!-- /wp:quote -->", "<!-- wp:heading -->", "<!-- wp:heading -->", "<!-- wp:table -->", "<!-- /wp:table -->", "p1", "s1", ' class=""', "<!-- wp:paragraph —&gt;-->", "<!-- wp:paragraph —&gt;-->", "<!-- /wp:paragraph -->", "<!-- wp:group -->", "<!-- /wp:group -->", "<!-- wp:columns -->", "<!-- /wp:columns -->", "<!-- /wp:column -->", "<!-- /wp:heading -->"])
+		content = content.replace('&nbsp;', " ")
 		content = update_all_img_src(content)
+		content = remove_wp_open_tag_comments_with_json(content)
 		content = add_missing_p_tags(content)
+		content = content.replace("<p></p>", "")
 	else:
 		content = None
 	
@@ -98,16 +107,31 @@ for item in channel.findall('item'):
 		sys.stderr.write(f"error with item at {pub_date_element.text}+ '\n'")
 		continue
 	
-	print(f"\n---\nOutput:\n")
-	print(f"<h1>{item_title}</h1>\n")
-	print(content)
-	print(f"<p><a href=\"{item_link}\">Original post: {item_link}</a></p>")
-	print(f"<p>Original post timestamp: {pub_date_element.text}</a></p>")
+	output_lines = [
+		f"<h1>{item_title}</h1>",
+		content,
+		f"<p><a href=\"{item_link}\">Original post: {item_link}</a></p>\n",
+		f"<p>Original post timestamp: {pub_date_element.text}</a></p>\n"
+	]
+	
 	if tags:
 		tags_html = format_linked_keyword_list(f"{root_url}/tags", tags)
-		print(f"<p>Tags: {tags_html}</p>")
-	if categories:
-		categories_html = format_linked_keyword_list(f"{root_url}/categories", tags)
-		print(f"<p>Categories: {categories_html}</p>")
+		output_lines.append(f"<p>Tags: {tags_html}</p>\n")
 	
-	print(f"Output path: `{path}`")
+	if categories:
+		categories_html = format_linked_keyword_list(f"{root_url}/categories", categories)
+		output_lines.append(f"<p>Categories: {categories_html}</p>\n")
+	
+	output_string = '\n'.join(output_lines)
+	path = f"{output_root}/{path}"
+	
+	if DEBUG:
+		print(f"\n---\nOutput:\n")
+		print(output_string)
+		print(f"Output path: `{path}`")
+	else:
+		try:
+			with open(path, 'w') as file: file.write(output_string)
+		except:
+			sys.stderr.write(f"Error: File '{file_path}' already exists.\n")
+			sys.stderr.write(f"New content was going to be:\n\n{content}\n\n")
