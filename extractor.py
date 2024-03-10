@@ -8,6 +8,8 @@ filename = "/Users/benwheatley/Downloads/Exported ks-wp blog/kitsunesoftware.wor
 tree = ET.parse(filename)
 root = tree.getroot()
 
+root_url = "https://benwheatley.github.io/blog"
+
 # Accessing channel information
 channel = root.find('channel')
 title = channel.find('title').text
@@ -30,6 +32,9 @@ def remove_wp_image(source):
 	result = re.sub(pattern2, '', result)
 	
 	return result
+
+def format_linked_keyword_list(base_url, items):
+	return ", ".join([f"<a href='{base_url}/{item}'>{item}</a>" for item in items])
 
 # Accessing and printing information for each item
 for item in channel.findall('item'):
@@ -79,7 +84,11 @@ for item in channel.findall('item'):
 	print(content)
 	print(f"<p><a href=\"{item_link}\">Original post: {item_link}</a></p>")
 	print(f"<p>Original post timestamp: {pub_date_element.text}</a></p>")
-	print(f"<p>Tags: {tags}</p>")
-	print(f"<p>Categories: {categories}</p>")
+	if tags:
+		tags_html = format_linked_keyword_list(f"{root_url}/tags", tags)
+		print(f"<p>Tags: {tags_html}</p>")
+	if categories:
+		categories_html = format_linked_keyword_list(f"{root_url}/categories", tags)
+		print(f"<p>Categories: {categories_html}</p>")
 	
 	print(f"Output path: `{path}`")
